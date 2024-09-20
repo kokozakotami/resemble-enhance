@@ -79,7 +79,7 @@ def main():
 
     start_time = time.perf_counter()
 
-    run_dir = args.run_dir
+    run_dir = "/tmp/resemble_cache"
 
     paths = sorted(args.in_dir.glob(f"**/*{args.suffix}"))
 
