@@ -67,7 +67,12 @@ class HParams:
             "train_micro_batch_size_per_gpu": self.batch_size_per_gpu,
             "optimizer": {
                 "type": "Adam",
-                "params": {"lr": float(self.min_lr)},
+                "params": {
+                    "lr": float(self.min_lr),
+                    "betas": [0.9, 0.999],  # Стандартные значения для Adam
+                    "eps": 1e-8,  # Стандартное значение для Adam
+                    "weight_decay": 0  # Можно настроить, если нужно
+                }
             },
             "scheduler": {
                 "type": "WarmupDecayLR",
@@ -76,10 +81,41 @@ class HParams:
                     "warmup_max_lr": float(self.max_lr),
                     "warmup_num_steps": self.warmup_steps,
                     "total_num_steps": self.max_steps,
-                    "warmup_type": "linear",
-                },
+                    "warmup_type": "linear",  # Тип разогрева ("linear", "constant" и др.)
+                }
             },
-            "gradient_clipping": self.gradient_clipping,
+            "gradient_clipping": self.gradient_clipping,  # Указание максимальной нормы градиента для обрезки
+
+            # Оптимизация нулевого уровня (Zero Redundancy Optimizer) для работы с памятью
+            "zero_optimization": {
+                "stage": 2,  # Рекомендуемая настройка для оптимизации памяти
+                "allgather_partitions": True,
+                "allgather_bucket_size": 5e8,
+                "reduce_scatter": True,
+                "reduce_bucket_size": 5e8,
+                "overlap_comm": True,
+                "contiguous_gradients": True,
+            },
+
+            # Полупроизвольная точность для ускорения вычислений
+            "fp16": {
+                "enabled": True,  # Включение 16-битной точности
+            },
+
+            # Путь для хранения чекпоинтов в /tmp
+            "checkpoint": {
+                "save_interval": 500,  # Сохранять каждый 500 шаг
+                "save_dir": "/tmp/deepspeed_checkpoints",  # Путь для чекпоинтов
+            },
+
+            # Путь для автотюнинга в /tmp
+            "autotuning": {
+                "enabled": True,  # Включение автотюнинга
+                "cache_dir": "/tmp/deepspeed_autotune_cache"  # Путь для кэширования результатов автотюнинга
+            },
+
+            # Настройки для логов (если используются)
+            "log_dir": "/tmp/deepspeed_logs",  # Путь для логов
         }
 
     @property
